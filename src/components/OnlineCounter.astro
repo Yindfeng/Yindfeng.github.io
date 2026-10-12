@@ -1,0 +1,96 @@
+<div class="online-box">
+  <span class="dot"></span>
+  当前在线: <span id="online-count">1</span> 人
+</div>
+
+<script>
+  import { supabase } from '../lib/supabaseClient';
+
+  // 每个浏览器生成并复用一个稳定 ID，避免刷新页面导致重复计数
+  const ONLINE_ID_KEY = 'online_visitor_id';
+  let myId = '';
+
+  try {
+    const cachedId = window.localStorage.getItem(ONLINE_ID_KEY);
+    if (cachedId) {
+      myId = cachedId;
+    } else {
+      myId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      window.localStorage.setItem(ONLINE_ID_KEY, myId);
+    }
+  } catch {
+    // 隐私模式等情况下 localStorage 可能不可用，降级为内存 ID
+    myId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  async function pulse() {
+    if (!supabase) {
+      const counterEl = document.getElementById('online-count');
+      if (counterEl) counterEl.innerText = '--';
+      return;
+    }
+
+    // 往数据库“报个到”
+    // 使用 upsert：如果 ID 存在就更新时间，不存在就插入
+    await supabase
+      .from('online_status')
+      .upsert({ id: myId, last_seen: new Date().toISOString() });
+
+    // 数一数 30 秒内“报过到”的人有多少
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000).toISOString();
+    
+    const { count, error } = await supabase
+      .from('online_status')
+      .select('*', { count: 'exact', head: true })
+      .gt('last_seen', thirtySecondsAgo);
+
+    if (!error && count !== null) {
+      const counterEl = document.getElementById('online-count');
+      if (counterEl) {
+        counterEl.innerText = String(count);
+      }
+    } else {
+      const counterEl = document.getElementById('online-count');
+      if (counterEl) {
+        counterEl.innerText = '--';
+      }
+    }
+  }
+
+  // 刚进来报到一次
+  pulse();
+
+  // 以后每 15 秒报到并刷新一次数字
+  setInterval(pulse, 15000);
+</script>
+
+<style>
+  .online-box {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 50;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    backdrop-filter: blur(5px);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    background: #00ff00;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 10px #00ff00;
+    animation: blink 2s infinite;
+  }
+  @keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+</style>

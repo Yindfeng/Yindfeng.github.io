@@ -1,0 +1,38 @@
+[
+	{
+		"id": "1",
+		"homeCover": "/assets/cover/book.png",
+		"useVideo": false,
+		"title": "竞争",
+		"desc": "我的第一篇站内文章",
+		"url": "/blog/文章/",
+		"detail": "/blog/文章/",
+		"category": "mind",
+		"tag": "思考",
+		"imageRatio": "4 / 3",
+		"imageFit": "cover",
+		"imagePosition": "center",
+		"date": "2026-03-15",
+		"mark": false,
+		"opensource": false
+	},
+	
+	
+	{
+		"id": "2",
+		"homeCover": "/assets/cover/book.png",
+		"useVideo": false,
+		"title": "今天有一万个鲁迅，就会死一万个",
+		"desc": "",
+		"url": "/blog/关于劝告/",
+		"detail": "/blog/关于劝告/",
+		"category": "mind",
+		"tag": "思考",
+		"imageRatio": "4 / 3",
+		"imageFit": "cover",
+		"imagePosition": "center",
+		"date": "2026-03-18",
+		"mark": false,
+		"opensource": false
+	}
+]

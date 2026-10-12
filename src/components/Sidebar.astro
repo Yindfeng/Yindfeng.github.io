@@ -1,0 +1,144 @@
+---
+---
+
+<aside class="site-sidebar" aria-hidden="false">
+  <div class="sidebar-inner">
+    <button class="sidebar-close" aria-label="关闭侧边栏">×</button>
+    <div class="sidebar-section">
+      <h3>关于我</h3>
+      <p>YiFeng — 喜欢阅读、音乐，记录自己的文章与思考。</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>联系方式</h3>
+      <p>邮箱: <a href="mailto:yf0204ind@gmail.com">yf0204ind@gmail.com</a></p>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>当前时间</h3>
+      <p id="sidebar-time">--:--</p>
+    </div>
+
+    <div class="sidebar-section" id="sidebar-weather">
+      <h3>本地天气</h3>
+      <p id="weather-status">正在获取位置…</p>
+      <p id="weather-summary" style="font-weight:700"></p>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>链接</h3>
+      <ul>
+        <li><a href="/about">关于</a></li>
+        <li><a href="/project">项目</a></li>
+        <li><a href="/blog">文章</a></li>
+      </ul>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .site-sidebar {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 260px;
+    background: rgba(18,20,28,0.92);
+    color: #e6eef7;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+    z-index: 60;
+    padding: 12px;
+    transition: transform 240ms ease;
+  }
+  .site-sidebar .sidebar-inner {font-size: 14px}
+  .site-sidebar h3 {margin: 8px 0 6px;font-size: 13px}
+  .site-sidebar p {margin: 0 0 8px;line-height:1.3}
+  .site-sidebar ul{padding-left:16px;margin:0}
+  .site-sidebar a{color:inherit;opacity:.92}
+  .sidebar-close{position:absolute;left:8px;top:6px;border:0;background:transparent;color:inherit;font-size:20px;cursor:pointer}
+
+  @media (max-width: 900px) {
+    .site-sidebar {display:none}
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const elTime = document.getElementById('sidebar-time');
+    function update() {
+      if (!elTime) return;
+      const d = new Date();
+      elTime.textContent = d.toLocaleTimeString();
+    }
+    update();
+    const id = setInterval(update, 1000);
+    const btn = document.querySelector('.sidebar-close');
+    if (btn) btn.addEventListener('click', () => {
+      const root = document.querySelector('.site-sidebar');
+      if (root) root.style.display = 'none';
+    });
+    addEventListener('pagehide', () => clearInterval(id));
+
+    // Weather: get geolocation then fetch from Open-Meteo (no API key required)
+    const elStatus = document.getElementById('weather-status');
+    const elSummary = document.getElementById('weather-summary');
+
+    function renderError(msg) {
+      if (elStatus) elStatus.textContent = msg;
+      if (elSummary) elSummary.textContent = '';
+    }
+
+    if (!('geolocation' in navigator)) {
+      renderError('浏览器不支持地理定位');
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          if (elStatus) elStatus.textContent = '获取天气中…';
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`;
+          fetch(url)
+            .then((r) => r.json())
+            .then((data) => {
+              if (!data || !data.current_weather) {
+                renderError('无法读取天气数据');
+                return;
+              }
+              const cur = data.current_weather;
+              const temp = cur.temperature;
+              const code = cur.weathercode;
+              const mapping = {
+                0: '晴',
+                1: '主要晴朗',
+                2: '分散的云',
+                3: '多云',
+                45: '雾',
+                48: '霜雾',
+                51: '弱小的毛毛雨',
+                53: '中等毛毛雨',
+                55: '密集毛毛雨',
+                61: '小雨',
+                63: '中雨',
+                65: '大雨',
+                71: '小雪',
+                73: '中雪',
+                75: '大雪',
+                80: '阵雨',
+                81: '强阵雨',
+                82: '暴雨',
+                95: '雷暴',
+                99: '冰雹',
+              };
+              const desc = mapping[code] || '天气信息';
+              if (elStatus) elStatus.textContent = `${temp}°C`;
+              if (elSummary) elSummary.textContent = desc;
+            })
+            .catch(() => renderError('天气服务请求失败'));
+        },
+        (err) => {
+          renderError('无法获取定位（已拒绝或超时）');
+        },
+        { timeout: 8000 }
+      );
+    }
+  })();
+</script>
