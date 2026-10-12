@@ -1,6 +1,6 @@
 <div class="online-box">
   <span class="dot"></span>
-  当前在线: <span id="online-count">1</span> 人
+  当前在线: <span id="online-count">--</span> 人
 </div>
 
 <script>
@@ -32,9 +32,11 @@
 
     // 往数据库“报个到”
     // 使用 upsert：如果 ID 存在就更新时间，不存在就插入
-    await supabase
+    try {
+    const { error: heartbeatError } = await supabase
       .from('online_status')
       .upsert({ id: myId, last_seen: new Date().toISOString() });
+    if (heartbeatError) throw heartbeatError;
 
     // 数一数 30 秒内“报过到”的人有多少
     const thirtySecondsAgo = new Date(Date.now() - 30 * 1000).toISOString();
@@ -54,6 +56,10 @@
       if (counterEl) {
         counterEl.innerText = '--';
       }
+    }
+    } catch {
+      const counterEl = document.getElementById('online-count');
+      if (counterEl) counterEl.innerText = '--';
     }
   }
 
