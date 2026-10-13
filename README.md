@@ -53,6 +53,3 @@ npm run preview
 
 `supabase/game_scores.sql` 包含在线状态和历史游戏排行榜表定义。当前贪吃蛇仅保存本地最高分，未使用排行榜表。脚本的匿名策略较宽松，不提供可信排名或防作弊能力；公开服务应独立评估访问策略，不要在敏感业务数据库上直接套用。
 
-## 来源与许可
-
-本项目基于 [Ricocc/public-portfolio-site](https://github.com/ricocc/public-portfolio-site) 修改，保留原始 MIT LICENSE 与版权声明。游戏页面保留原有 Fariat 署名。仓库代码许可不自动覆盖个人文章、照片、音频和第三方素材；复用这些内容前请确认各自授权。
